@@ -11,10 +11,53 @@ var (
 )
 
 // WsDepthHandler handle websocket depth event
-type WsDepthHandler func(event *WsDepthEvent)
+type WsDiffDepthHandler func(event *WsDiffDepthEvent)
+type WsPartialBookDepthHandler func(event *WsPartialBookDepthEvent)
 
-// WsDepthServe serve websocket depth handler with a symbol
-func WsDepthServe(symbol string, handler WsDepthHandler) (chan struct{}, error) {
+// WsPartialBookDepthServe Top <levels> bids and asks, pushed every second. Valid <levels> are 5, 10, or 20.
+func WsPartialBookDepthServe(symbol string, levels string, handler WsPartialBookDepthHandler) (chan struct{}, error) {
+	endpoint := fmt.Sprintf("%s/%s@depth%s", baseURL, strings.ToLower(symbol), levels)
+	cfg := newWsConfig(endpoint)
+	wsHandler := func(message []byte) {
+		j, err := newJSON(message)
+		if err != nil {
+			// TODO: callback if there is an error
+			return
+		}
+		event := new(WsPartialBookDepthEvent)
+		event.LastUpdateId = j.Get("lastUpdateId").MustInt64()
+		bidsLen := len(j.Get("bids").MustArray())
+		event.Bids = make([]Bid, bidsLen)
+		for i := 0; i < bidsLen; i++ {
+			item := j.Get("bids").GetIndex(i)
+			event.Bids[i] = Bid{
+				Price:    item.GetIndex(0).MustString(),
+				Quantity: item.GetIndex(1).MustString(),
+			}
+		}
+		asksLen := len(j.Get("asks").MustArray())
+		event.Asks = make([]Ask, asksLen)
+		for i := 0; i < asksLen; i++ {
+			item := j.Get("asks").GetIndex(i)
+			event.Asks[i] = Ask{
+				Price:    item.GetIndex(0).MustString(),
+				Quantity: item.GetIndex(1).MustString(),
+			}
+		}
+		handler(event)
+	}
+	return wsServe(cfg, wsHandler)
+}
+
+// WsPartialBookDepthEvent define websocket partial orderbook depth event
+type WsPartialBookDepthEvent struct {
+	LastUpdateId int64 `json:"lastUpdateId"`
+	Bids         []Bid `json:"bids"`
+	Asks         []Ask `json:"asks"`
+}
+
+// WsDiffDepthServe Order book price and quantity depth updates used to locally manage an order book pushed every second.
+func WsDiffDepthServe(symbol string, handler WsDiffDepthHandler) (chan struct{}, error) {
 	endpoint := fmt.Sprintf("%s/%s@depth", baseURL, strings.ToLower(symbol))
 	cfg := newWsConfig(endpoint)
 	wsHandler := func(message []byte) {
@@ -23,7 +66,7 @@ func WsDepthServe(symbol string, handler WsDepthHandler) (chan struct{}, error) 
 			// TODO: callback if there is an error
 			return
 		}
-		event := new(WsDepthEvent)
+		event := new(WsDiffDepthEvent)
 		event.Event = j.Get("e").MustString()
 		event.Time = j.Get("E").MustInt64()
 		event.Symbol = j.Get("s").MustString()
@@ -52,7 +95,7 @@ func WsDepthServe(symbol string, handler WsDepthHandler) (chan struct{}, error) 
 }
 
 // WsDepthEvent define websocket depth event
-type WsDepthEvent struct {
+type WsDiffDepthEvent struct {
 	Event    string `json:"e"`
 	Time     int64  `json:"E"`
 	Symbol   string `json:"s"`
