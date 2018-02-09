@@ -76,8 +76,8 @@ func (s *websocketServiceTestSuite) TestDepthServe() {
     }`)
 	s.mockWsServe(data)
 	defer s.assertWsServe()
-	_, err := WsDepthServe("ETHBTC", func(event *WsDepthEvent) {
-		e := &WsDepthEvent{
+	_, err := WsDiffDepthServe("ETHBTC", func(event *WsDiffDepthEvent) {
+		e := &WsDiffDepthEvent{
 			Event:    "depthUpdate",
 			Time:     1499404630606,
 			Symbol:   "ETHBTC",
@@ -103,12 +103,12 @@ func (s *websocketServiceTestSuite) TestDepthServe() {
 				},
 			},
 		}
-		s.assertWsDepthEventEqual(e, event)
+		s.assertWsDiffDepthEventEqual(e, event)
 	})
 	s.r().NoError(err)
 }
 
-func (s *websocketServiceTestSuite) assertWsDepthEventEqual(e, a *WsDepthEvent) {
+func (s *websocketServiceTestSuite) assertWsDiffDepthEventEqual(e, a *WsDiffDepthEvent) {
 	r := s.r()
 	r.Equal(e.Event, a.Event, "Event")
 	r.Equal(e.Time, a.Time, "Time")

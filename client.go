@@ -229,6 +229,11 @@ func (c *Client) NewCreateOrderService() *CreateOrderService {
 	return &CreateOrderService{c: c}
 }
 
+// NewSystemStatusService init system status service
+func (c *Client) NewSystemStatusService() *SystemStatusService {
+	return &SystemStatusService{c: c}
+}
+
 // NewGetOrderService init get order service
 func (c *Client) NewGetOrderService() *GetOrderService {
 	return &GetOrderService{c: c}
