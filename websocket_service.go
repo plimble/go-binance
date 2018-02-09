@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	baseURL = "wss://stream.binance.com:9443/ws"
+	baseURL = "wss://stream2.binance.com:9443/ws"
 )
 
 // WsDepthHandler handle websocket depth event
