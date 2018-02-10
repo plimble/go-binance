@@ -4,37 +4,63 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-// WsHandler handle raw websocket message
-type WsHandler func(message []byte)
-
-type wsConfig struct {
-	endpoint string
+type WsService struct {
+	endpoint   string
+	close      chan struct{}
+	handler    WsHandler
+	errHandler WsErrorHandler
 }
 
-func newWsConfig(endpoint string) *wsConfig {
-	return &wsConfig{
-		endpoint: endpoint,
+func newWsService(endpoint string, handler WsHandler, errHandler WsErrorHandler) *WsService {
+	if handler == nil {
+		handler = defaultWsHandler
+	}
+
+	if errHandler == nil {
+		errHandler = defaultWsErrorHandler
+	}
+
+	return &WsService{
+		endpoint:   endpoint,
+		close:      make(chan struct{}, 1),
+		handler:    handler,
+		errHandler: errHandler,
 	}
 }
 
-type wsServeFunc func(*wsConfig, WsHandler) (chan struct{}, error)
+func (w *WsService) Close() {
+	w.close <- struct{}{}
+}
 
-var wsServe = func(cfg *wsConfig, handler WsHandler) (done chan struct{}, err error) {
-	c, _, err := websocket.DefaultDialer.Dial(cfg.endpoint, nil)
+func (w *WsService) Serve() error {
+	c, _, err := websocket.DefaultDialer.Dial(w.endpoint, nil)
 	if err != nil {
-		return
+		return err
 	}
-	done = make(chan struct{})
-	go func() {
-		defer c.Close()
-		defer close(done)
-		for {
+
+	defer c.Close()
+	for {
+		select {
+		case <-w.close:
+			c.Close()
+			return nil
+		default:
 			_, message, err := c.ReadMessage()
 			if err != nil {
-				return
+				w.errHandler(err)
+			} else {
+				w.handler(message)
 			}
-			go handler(message)
 		}
-	}()
-	return
+	}
 }
+
+// WsHandler handle raw websocket message
+type WsHandler func(message []byte)
+type WsErrorHandler func(err error)
+
+var defaultWsErrorHandler = func(err error) {
+	panic(err)
+}
+
+var defaultWsHandler = func(message []byte) {}
