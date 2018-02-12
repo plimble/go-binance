@@ -54,7 +54,7 @@ type ExchangeInfoSymbol struct {
 	QuotePrecision     int                   `json:"quotePrecision"`
 	OrderTypes         []string              `json:"orderTypes"`
 	IcebergAllowed     bool                  `json:"icebergAllowed"`
-	Filter             []*ExchangeInfoFilter `json:"filters"`
+	Filters            []*ExchangeInfoFilter `json:"filters"`
 }
 
 type ExchangeInfoFilter struct {
