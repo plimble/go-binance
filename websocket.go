@@ -9,6 +9,7 @@ type WsService struct {
 	close      chan struct{}
 	handler    WsHandler
 	errHandler WsErrorHandler
+	c          *websocket.Conn
 }
 
 func newWsService(endpoint string, handler WsHandler, errHandler WsErrorHandler) *WsService {
@@ -32,20 +33,22 @@ func (w *WsService) Close() {
 	w.close <- struct{}{}
 }
 
-func (w *WsService) Serve() error {
-	c, _, err := websocket.DefaultDialer.Dial(w.endpoint, nil)
-	if err != nil {
-		return err
-	}
+func (w *WsService) Connect() error {
+	var err error
+	w.c, _, err = websocket.DefaultDialer.Dial(w.endpoint, nil)
 
-	defer c.Close()
+	return err
+}
+
+func (w *WsService) Serve() {
+	defer w.c.Close()
 	for {
 		select {
 		case <-w.close:
-			c.Close()
-			return nil
+			w.c.Close()
+			return
 		default:
-			_, message, err := c.ReadMessage()
+			_, message, err := w.c.ReadMessage()
 			if err != nil {
 				w.errHandler(err)
 			} else {
