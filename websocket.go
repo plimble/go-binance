@@ -1,8 +1,6 @@
 package binance
 
 import (
-	"fmt"
-
 	"strings"
 
 	"github.com/gorilla/websocket"
@@ -48,7 +46,6 @@ func (w *WsService) Serve() {
 		_, message, err := w.c.ReadMessage()
 		if err != nil {
 			if strings.Contains(err.Error(), "use of closed network connection") {
-				fmt.Println("close error")
 				return
 			}
 
