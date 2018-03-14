@@ -129,6 +129,7 @@ func (s *PriceChangeStatsService) Do(ctx context.Context, opts ...RequestOption)
 
 // PriceChangeStats define price change stats
 type PriceChangeStats struct {
+	Symbol             string `json:"symbol"`
 	PriceChange        string `json:"priceChange"`
 	PriceChangePercent string `json:"priceChangePercent"`
 	WeightedAvgPrice   string `json:"weightedAvgPrice"`
