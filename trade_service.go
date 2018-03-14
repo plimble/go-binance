@@ -58,6 +58,16 @@ func (s *ListTradesService) Do(ctx context.Context, opts ...RequestOption) (res 
 }
 
 // Trade define trade info
+type HistoricalTrade struct {
+	ID           int64  `json:"id"`
+	Price        string `json:"price"`
+	Quantity     string `json:"qty"`
+	Time         int64  `json:"time"`
+	IsBuyerMaker bool   `json:"isBuyerMaker"`
+	IsBestMatch  bool   `json:"isBestMatch"`
+}
+
+// Trade define trade info
 type Trade struct {
 	ID              int64  `json:"id"`
 	Price           string `json:"price"`
@@ -151,4 +161,57 @@ type AggTrade struct {
 	Timestamp        int64  `json:"T"`
 	IsBuyerMaker     bool   `json:"m"`
 	IsBestPriceMatch bool   `json:"M"`
+}
+
+// HistoricalTradesService trades
+type HistoricalTradesService struct {
+	c      *Client
+	symbol string
+	limit  *int
+	fromID *int64
+}
+
+// Symbol set symbol
+func (s *HistoricalTradesService) Symbol(symbol string) *HistoricalTradesService {
+	s.symbol = symbol
+	return s
+}
+
+// Limit set limit
+func (s *HistoricalTradesService) Limit(limit int) *HistoricalTradesService {
+	s.limit = &limit
+	return s
+}
+
+// FromID set fromID
+func (s *HistoricalTradesService) FromID(fromID int64) *HistoricalTradesService {
+	s.fromID = &fromID
+	return s
+}
+
+// Do send request
+func (s *HistoricalTradesService) Do(ctx context.Context, opts ...RequestOption) (res []*HistoricalTrade, err error) {
+	r := &request{
+		method:   "GET",
+		endpoint: "/api/v1/historicalTrades",
+		secType:  secTypeAPIKey,
+	}
+	r.setParam("symbol", s.symbol)
+	if s.limit != nil {
+		r.setParam("limit", *s.limit)
+	}
+	if s.fromID != nil {
+		r.setParam("fromId", *s.fromID)
+	}
+
+	data, err := s.c.callAPI(ctx, r, opts...)
+	if err != nil {
+		return
+	}
+	res = make([]*HistoricalTrade, 0)
+	err = json.Unmarshal(data, &res)
+	if err != nil {
+		return
+	}
+	return
 }

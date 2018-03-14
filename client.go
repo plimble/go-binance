@@ -41,6 +41,7 @@ const (
 
 	TimeInForceGTC TimeInForce = "GTC"
 	TimeInForceIOC TimeInForce = "IOC"
+	TimeInForceFOK TimeInForce = "FOK"
 
 	timestampKey  = "timestamp"
 	signatureKey  = "signature"
@@ -115,7 +116,7 @@ func (c *Client) parseRequest(r *request, opts ...RequestOption) (err error) {
 	bodyString := r.form.Encode()
 	header := http.Header{}
 	if bodyString != "" {
-		header.Set("Context-Type", "application/x-www-form-urlencoded")
+		header.Set("Content-Type", "application/x-www-form-urlencoded")
 		body = bytes.NewBufferString(bodyString)
 	}
 	if r.secType == secTypeAPIKey || r.secType == secTypeSigned {
@@ -219,6 +220,11 @@ func (c *Client) NewListPricesService() *ListPricesService {
 	return &ListPricesService{c: c}
 }
 
+// NewBookTickerService init booking ticker service
+func (c *Client) NewBookTickerService() *BookTickerService {
+	return &BookTickerService{c: c}
+}
+
 // NewListBookTickersService init listing booking tickers service
 func (c *Client) NewListBookTickersService() *ListBookTickersService {
 	return &ListBookTickersService{c: c}
@@ -297,4 +303,13 @@ func (c *Client) NewCloseUserStreamService() *CloseUserStreamService {
 // NewExchangeInfoService init exchange info service
 func (c *Client) NewExchangeInfoService() *ExchangeInfoService {
 	return &ExchangeInfoService{c: c}
+}
+
+// NewHistoricalTradesService init listing trades service
+func (c *Client) NewHistoricalTradesService() *HistoricalTradesService {
+	return &HistoricalTradesService{c: c}
+}
+
+func (c *Client) NewListPriceChangeStatsService() *ListPriceChangeStatsService {
+	return &ListPriceChangeStatsService{c: c}
 }
