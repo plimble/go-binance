@@ -36,6 +36,8 @@ func (w *WsService) Close() {
 func (w *WsService) Connect() error {
 	var err error
 	w.c, _, err = websocket.DefaultDialer.Dial(w.endpoint, nil)
+	w.c.SetPingHandler(nil)
+	w.c.SetPongHandler(nil)
 
 	return err
 }

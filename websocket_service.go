@@ -13,6 +13,7 @@ var (
 // WsDepthHandler handle websocket depth event
 type WsDiffDepthHandler func(event *WsDiffDepthEvent)
 type WsPartialBookDepthHandler func(event *WsPartialBookDepthEvent)
+type WsAllPriceTickerHandler func(event WsTickersEvent)
 
 // WsPartialBookDepthServe Top <levels> bids and asks, pushed every second. Valid <levels> are 5, 10, or 20.
 func WsPartialBookDepthServe(symbol string, levels string, handler WsPartialBookDepthHandler, errHandler WsErrorHandler) *WsService {
@@ -186,4 +187,47 @@ type WsAggTradeEvent struct {
 func WsUserDataServe(listenKey string, handler WsHandler, errHandler WsErrorHandler) *WsService {
 	endpoint := fmt.Sprintf("%s/%s", baseURL, listenKey)
 	return newWsService(endpoint, handler, errHandler)
+}
+
+type WsTickersEvent []*WsTickerEvent
+
+type WsTickerEvent struct {
+	Event     string `json:"e"`
+	EventTime int64  `json:"E"`
+	Symbol    string `json:"s"`
+	// PriceChange           string `json:"p"`
+	// PriceChangePercent    string `json:"P"`
+	// WeightedAveragePrice  string `json:"w"`
+	// PreviousDayClosePrice string `json:"x"`
+	// CurrentDayClosePrice  string `json:"c"`
+	// CloseTradeQty         string `json:"Q"`
+	BestBidPrice string `json:"b"`
+	BestBidQty   string `json:"B"`
+	BestAskPrice string `json:"a"`
+	BestAskQty   string `json:"A"`
+	// OpenPrice             string `json:"o"`
+	// HighPrice             string `json:"h"`
+	// LowPrice              string `json:"l"`
+	// TotalTradeBaseVolume  string `json:"v"`
+	// TotalTradeQuoteVolume string `json:"q"`
+	// OpenTime              int64  `json:"O"`
+	// CloseTime             int64  `json:"C"`
+	// FirstTradeID          int64  `json:"F"`
+	// LastTradeID           int64  `json:"L"`
+	// TotalTrade            int64  `json:"n"`
+}
+
+// WsAggTradeServe serve websocket aggregate handler with a symbol
+func WsAllPriceTickerServe(handler WsAllPriceTickerHandler, errHandler WsErrorHandler) *WsService {
+	endpoint := fmt.Sprintf("%s/!ticker@arr", baseURL)
+	wsHandler := func(message []byte) {
+		event := make(WsTickersEvent, 0, 250)
+		err := json.Unmarshal(message, &event)
+		if err != nil {
+			return
+		}
+		handler(event)
+	}
+
+	return newWsService(endpoint, wsHandler, errHandler)
 }
