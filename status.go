@@ -25,13 +25,19 @@ func (s *SystemStatusService) Do(ctx context.Context) (*SystemStatus, error) {
 
 	data, err := s.c.callAPI(ctx, r)
 	if err != nil {
-		return nil, err
+		return nil, APIError{
+			Code:    -1,
+			Message: err.Error(),
+		}
 	}
 
 	res := &SystemStatus{}
 	err = json.Unmarshal(data, res)
 	if err != nil {
-		return nil, err
+		return nil, APIError{
+			Code:    -1,
+			Message: err.Error(),
+		}
 	}
 
 	return res, nil
