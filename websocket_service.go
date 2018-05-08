@@ -192,11 +192,11 @@ func WsUserDataServe(listenKey string, handler WsHandler, errHandler WsErrorHand
 type WsTickersEvent []*WsTickerEvent
 
 type WsTickerEvent struct {
-	Event     string `json:"e"`
-	EventTime int64  `json:"E"`
-	Symbol    string `json:"s"`
-	// PriceChange           string `json:"p"`
-	// PriceChangePercent    string `json:"P"`
+	Event              string `json:"e"`
+	EventTime          int64  `json:"E"`
+	Symbol             string `json:"s"`
+	PriceChange        string `json:"p"`
+	PriceChangePercent string `json:"P"`
 	// WeightedAveragePrice  string `json:"w"`
 	// PreviousDayClosePrice string `json:"x"`
 	// CurrentDayClosePrice  string `json:"c"`
@@ -209,7 +209,7 @@ type WsTickerEvent struct {
 	// HighPrice             string `json:"h"`
 	// LowPrice              string `json:"l"`
 	// TotalTradeBaseVolume  string `json:"v"`
-	// TotalTradeQuoteVolume string `json:"q"`
+	TotalTradeQuoteVolume string `json:"q"`
 	// OpenTime              int64  `json:"O"`
 	// CloseTime             int64  `json:"C"`
 	// FirstTradeID          int64  `json:"F"`
